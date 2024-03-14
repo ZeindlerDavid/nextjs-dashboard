@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
  
-const FormSchema = z.object({
+const InvoiceFormSchema = z.object({
   id: z.string(),
   customerId: z.string(),
   amount: z.coerce.number(),
@@ -14,7 +14,8 @@ const FormSchema = z.object({
   date: z.string(),
 });
  
-const CreateInvoice = FormSchema.omit({ id: true, date: true });
+const CreateInvoice = InvoiceFormSchema.omit({ id: true, date: true });
+const UpdateInvoice = InvoiceFormSchema.omit({ id: true, date: true });
 
 export async function createInvoice(formData: FormData) {
     // const rawFormData = Object.fromEntries(formData.entries());
@@ -34,7 +35,28 @@ export async function createInvoice(formData: FormData) {
     revalidatePath('/dashboard/invoices');
     redirect('/dashboard/invoices');
 
-  // Test it out:
-  console.log(customerId);
-  console.log(typeof customerId);
 }
+
+
+export async function updateInvoice(id: string, formData: FormData) {
+    const { customerId, amount, status } = UpdateInvoice.parse({
+      customerId: formData.get('customerId'),
+      amount: formData.get('amount'),
+      status: formData.get('status'),
+    });
+   
+    console.log(formData.get('customerId'));
+    console.log(formData.get('amount'));
+    console.log(formData.get('status'));
+
+    const amountInCents = amount * 100;
+   
+    await sql`
+      UPDATE invoices
+      SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+      WHERE id = ${id}
+    `;
+   
+    revalidatePath('/dashboard/invoices');
+    redirect('/dashboard/invoices');
+  }
