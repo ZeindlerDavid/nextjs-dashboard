@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const { db } = require('@vercel/postgres');
 const {
   invoices,
